@@ -1,7 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ditonton/common/constants.dart';
-import 'package:ditonton/common/state_enum.dart';
 import 'package:ditonton/domain/entities/tv.dart';
+import 'package:ditonton/presentation/bloc/base_bloc_state.dart';
+import 'package:ditonton/presentation/bloc/tv/tv_ota_bloc.dart';
+import 'package:ditonton/presentation/bloc/tv/tv_popular_bloc.dart';
+import 'package:ditonton/presentation/bloc/tv/tv_top_rated_bloc.dart';
 import 'package:ditonton/presentation/pages/about_page.dart';
 import 'package:ditonton/presentation/pages/movie/home_movie_page.dart';
 import 'package:ditonton/presentation/pages/tv_show/on_the_air_tv_show_page.dart';
@@ -9,10 +12,9 @@ import 'package:ditonton/presentation/pages/tv_show/popular_tv_show_page.dart';
 import 'package:ditonton/presentation/pages/tv_show/search_tv_show_page.dart';
 import 'package:ditonton/presentation/pages/tv_show/top_rated_tv_show_page.dart';
 import 'package:ditonton/presentation/pages/tv_show/tv_show_detail_page.dart';
-import 'package:ditonton/presentation/pages/watchlist_movies_page.dart';
-import 'package:ditonton/presentation/provider/tv_list_notifier.dart';
+import 'package:ditonton/presentation/pages/watchlist_page.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeTVShowPage extends StatefulWidget {
   static const ROUTE_NAME = '/home-tv-show';
@@ -25,11 +27,10 @@ class _HomeTVShowPageState extends State<HomeTVShowPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => Provider.of<TvListNotifier>(context, listen: false)
-        ..fetchOnTheAirTv()
-        ..fetchPopularTvShow()
-        ..fetchTopRatedTvShow());
+    context
+      ..read<TvOtaBloc>().add(OnFetchOta())
+      ..read<TvPopularBloc>().add(OnFetchPopularTv())
+      ..read<TvTopRatedBloc>().add(OnFetchTopRatedTv());
   }
 
   @override
@@ -65,7 +66,7 @@ class _HomeTVShowPageState extends State<HomeTVShowPage> {
               title: Text('Watchlist'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, WatchlistMoviesPage.ROUTE_NAME);
+                Navigator.pushNamed(context, WatchlistPage.ROUTE_NAME);
               },
             ),
             ListTile(
@@ -101,16 +102,17 @@ class _HomeTVShowPageState extends State<HomeTVShowPage> {
                 onTap: () =>
                     Navigator.pushNamed(context, OnTheAirTvShowPage.ROUTE_NAME),
               ),
-              Consumer<TvListNotifier>(builder: (context, data, child) {
-                final state = data.onTheAirState;
-                if (state == RequestState.Loading) {
+              BlocBuilder<TvOtaBloc, BaseBlocState>(builder: (context, state) {
+                if (state is Loading) {
                   return Center(
                     child: CircularProgressIndicator(),
                   );
-                } else if (state == RequestState.Loaded) {
-                  return TvList(data.onTheAirTv);
+                } else if (state is HasData) {
+                  return TvList(state.result);
+                } else if (state is Error) {
+                  return Center(child: Text(state.message));
                 } else {
-                  return Text('Failed');
+                  return Center(child: Text('Not Found'));
                 }
               }),
               _buildSubHeading(
@@ -118,35 +120,41 @@ class _HomeTVShowPageState extends State<HomeTVShowPage> {
                 onTap: () =>
                     Navigator.pushNamed(context, PopularTvShowPage.ROUTE_NAME),
               ),
-              Consumer<TvListNotifier>(builder: (context, data, child) {
-                final state = data.popularTvShowState;
-                if (state == RequestState.Loading) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (state == RequestState.Loaded) {
-                  return TvList(data.popularTvShow);
-                } else {
-                  return Text('Failed');
+              BlocBuilder<TvPopularBloc, BaseBlocState>(
+                builder: (context, state) {
+                  if (state is Loading) {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is HasData) {
+                    return TvList(state.result);
+                  } else if (state is Error) {
+                    return Center(child: Text(state.message));
+                  } else {
+                    return Center(child: Text('Not Found'));
+                  }
                 }
-              }),
+              ),
               _buildSubHeading(
                 title: 'Top Rated',
                 onTap: () =>
                     Navigator.pushNamed(context, TopRatedTvShowPage.ROUTE_NAME),
               ),
-              Consumer<TvListNotifier>(builder: (context, data, child) {
-                final state = data.topRatedTvShowState;
-                if (state == RequestState.Loading) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (state == RequestState.Loaded) {
-                  return TvList(data.topRatedTvShow);
-                } else {
-                  return Text('Failed');
+              BlocBuilder<TvTopRatedBloc, BaseBlocState>(
+                builder: (context, state) {
+                  if (state is Loading) {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is HasData) {
+                    return TvList(state.result);
+                  } else if (state is Error) {
+                    return Center(child: Text(state.message));
+                  } else {
+                    return Center(child: Text('Not Found'));
+                  }
                 }
-              }),
+              ),
             ],
           ),
         ),

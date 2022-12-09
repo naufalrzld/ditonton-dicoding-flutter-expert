@@ -1,26 +1,35 @@
-import 'package:ditonton/common/state_enum.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:ditonton/domain/entities/tv.dart';
+import 'package:ditonton/presentation/bloc/base_bloc_state.dart';
+import 'package:ditonton/presentation/bloc/tv/tv_ota_bloc.dart';
 import 'package:ditonton/presentation/pages/tv_show/on_the_air_tv_show_page.dart';
-import 'package:ditonton/presentation/provider/on_the_air_tv_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
-import 'package:provider/provider.dart';
+import 'package:mocktail/mocktail.dart';
 
-import 'on_the_air_tv_show_page_test.mocks.dart';
+import '../../../helpers/fake_base_bloc_state.dart';
 
-@GenerateMocks([OnTheAirTvNotifier])
+class TvOtaEventFake extends Fake implements TvOtaEvent {}
+
+class MockTvOtaBloc extends MockBloc<TvOtaEvent, BaseBlocState>
+    implements TvOtaBloc {}
+
 void main() {
-  late MockOnTheAirTvNotifier mockNotifier;
+  late MockTvOtaBloc mockTvOtaBloc;
+
+  setUpAll(() {
+    registerFallbackValue(TvOtaEventFake());
+    registerFallbackValue(BaseBlocStateFake());
+  });
 
   setUp(() {
-    mockNotifier = MockOnTheAirTvNotifier();
+    mockTvOtaBloc = MockTvOtaBloc();
   });
 
   Widget _makeTestableWidget(Widget body) {
-    return ChangeNotifierProvider<OnTheAirTvNotifier>.value(
-      value: mockNotifier,
+    return BlocProvider<TvOtaBloc>.value(
+      value: mockTvOtaBloc,
       child: MaterialApp(
         home: body,
       ),
@@ -29,7 +38,7 @@ void main() {
 
   testWidgets('Page should display center progress bar when loading',
       (WidgetTester tester) async {
-    when(mockNotifier.state).thenReturn(RequestState.Loading);
+    when(() => mockTvOtaBloc.state).thenReturn(Loading());
 
     final progressBarFinder = find.byType(CircularProgressIndicator);
     final centerFinder = find.byType(Center);
@@ -42,8 +51,7 @@ void main() {
 
   testWidgets('Page should display ListView when data is loaded',
       (WidgetTester tester) async {
-    when(mockNotifier.state).thenReturn(RequestState.Loaded);
-    when(mockNotifier.tv).thenReturn(<Tv>[]);
+    when(() => mockTvOtaBloc.state).thenReturn(HasData(<Tv>[]));
 
     final listViewFinder = find.byType(ListView);
 
@@ -54,8 +62,7 @@ void main() {
 
   testWidgets('Page should display text with message when Error',
       (WidgetTester tester) async {
-    when(mockNotifier.state).thenReturn(RequestState.Error);
-    when(mockNotifier.message).thenReturn('Error message');
+    when(() => mockTvOtaBloc.state).thenReturn(Error('Error message'));
 
     final textFinder = find.byKey(Key('error_message'));
 

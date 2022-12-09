@@ -1,5 +1,6 @@
 import 'package:ditonton/common/constants.dart';
-import 'package:ditonton/presentation/bloc/tv_search_bloc.dart';
+import 'package:ditonton/presentation/bloc/base_bloc_state.dart';
+import 'package:ditonton/presentation/bloc/tv/tv_search_bloc.dart';
 import 'package:ditonton/presentation/widgets/tv_card_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,13 +35,13 @@ class SearchTvShowPage extends StatelessWidget {
               'Search Result',
               style: kHeading6,
             ),
-            BlocBuilder<TvSearchBloc, TvSearchState>(
+            BlocBuilder<TvSearchBloc, BaseBlocState>(
               builder: (context, state) {
-                if (state is SearchLoading) {
+                if (state is Loading) {
                   return Center(
                     child: CircularProgressIndicator(),
                   );
-                } else if (state is SearchHasData) {
+                } else if (state is HasData) {
                   final result = state.result;
                   return Expanded(
                     child: ListView.builder(
