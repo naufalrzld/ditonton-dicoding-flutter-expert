@@ -1,3 +1,4 @@
+import 'package:ditonton/data/datasources/api_services.dart';
 import 'package:ditonton/data/datasources/db/database_helper.dart';
 import 'package:ditonton/data/datasources/movie_local_data_source.dart';
 import 'package:ditonton/data/datasources/movie_remote_data_source.dart';
@@ -28,7 +29,6 @@ import 'package:ditonton/presentation/bloc/tv/tv_search_bloc.dart';
 import 'package:ditonton/presentation/bloc/tv/tv_top_rated_bloc.dart';
 import 'package:ditonton/presentation/bloc/tv/tv_watch_list_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:http/http.dart' as http;
 
 import 'data/datasources/tv_remote_data_source.dart';
 import 'data/repositories/tv_repository_impl.dart';
@@ -116,5 +116,5 @@ void init() {
   locator.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
 
   // external
-  locator.registerLazySingleton(() => http.Client());
+  locator.registerLazySingleton(() => ApiService.client);
 }
